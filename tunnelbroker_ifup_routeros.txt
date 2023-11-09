@@ -1,0 +1,300 @@
+# intro
+# ========================
+# This script updates ipv4.tunnelbroker.net endpoint whenever endpoint changes,
+# and employs exponential backoff and randomization to avoid pounding
+# the server. Short bursts of endpoint interface changes without change
+# of address are handled gracefully through a mutex, which identifies each burst
+# with a random number sourced from mikrotik otp.
+
+# mtx_lock and mtx_unlock
+# ========================
+:global "dyn-mtx-id"
+# initially false, or tolerably uninitialized
+:global "dyn-mtx-state"
+
+# protected by a mutex, and engaged in comparison with $"local-address"
+:global "dyn-as6939-endpoint"
+
+# timeout parameters
+# ========================
+:global "dyn-uptime"
+:global "dyn-staleness"
+
+# instructions
+# ========================
+# to deploy this script,
+# put the username owning the tunnel instead of nhmyhfkgzr_qua_user, 
+# put the password per tunnel instead of jen47d5tmq_qua_password,
+# and put the six-digit ID per tunnel instead of nyfdsib3o9_qua_hostname. 
+
+{
+     # seed MCG-32(0x93D765DD) and MCG-16(0xECC5)
+     :local "otp-id"
+     :local "mcg-seed-32"
+     :local "mcg-seed-16"
+     :local "otp-str"
+     # BEGIN do-while
+     :do {
+          :set "otp-str" ([/certificate scep-server otp generate minutes-valid=0 as-value]->"password")
+          :set "mcg-seed-16" [:tonum ("0x".[:pick $"otp-str" 16 20])]
+          :set "mcg-seed-32" [:tonum ("0x".[:pick $"otp-str" 8 16])]
+          :set "otp-id" [:tonum ("0x".[:pick $"otp-str" 0 8])]
+          :set "otp-str" [:nothing]
+     } while=($"mcg-seed-32" = 0 or $"mcg-seed-16" = 0)
+     # END do-while
+
+     :local "job-dyn-uptime" [/system resource get uptime]
+
+     # BEGIN mtx_lock
+     # BEGIN do-while
+     :do {
+          # BEGIN do-while
+          :do {
+               :set "dyn-mtx-id" $"otp-id"
+          } while=($"dyn-mtx-state")
+          # END do-while
+          :set "dyn-mtx-state" true
+     } while=($"dyn-mtx-id" != $"otp-id")
+     # END do-while
+     # END mtx_lock
+
+     :if ($"dyn-as6939-endpoint" != $"local-address" and ([:len $"dyn-uptime"] = 0 or $"job-dyn-uptime" > $"dyn-uptime")) do={
+          :local response
+          :local "iter-fetch-yesno" true
+          :local "timeo-fetch-tab" { 479; 239; 113; 59; 29; 13; 7; 5; 2 }
+          :local "timeo-fetch-ind" 9
+          :local "digit-dict" { "0"=0; "1"=1; "2"=2; "3"=3; "4"=4; "5"=5; "6"=6; "7"=7; "8"=8; "9"=9 }
+          # BEGIN do-while
+          :do {
+               :local "abcd-ip"
+               :local "error-at-fetch" false
+               # BEGIN on-error
+               :do {
+                    :set response [/tool fetch check-certificate=yes mode=https user=nhmyhfkgzr_qua_user password=jen47d5tmq_qua_password url="https://ipv4.tunnelbroker.net/nic/update\3Fhostname=nyfdsib3o9_qua_hostname" as-value output=user]
+                    :local "offset-from-data"
+                    :local "abcd-num" 0
+                    :local "abcd-mask" { 0xFFFFFF00; 0xFFFF00FF; 0xFF00FFFF; 0x00FFFFFF }
+                    :local "abcd-ind" 4
+                    :local "test-status" (($response->"status") = "finished")
+                    {
+                         # set variable "offset-from-data" to 5 if ($response->"data") begins with "good ",
+                         # or 6 if the string begins with "nochg ".
+                         # otherwise, make sure [:typeof $"offset-from-data"] remains "nothing".
+                         :local "lookup-tab-base" {"good "=5; "nochg"=5}
+                         :local "lookup-tab-diff" {"good "=[:toarray ""]; "nochg"={" "=1}}
+                         :set "offset-from-data" (($"lookup-tab-base"->[:pick ($response->"data") 0 5]) + (($"lookup-tab-diff"->[:pick ($response->"data") 0 5])->[:pick ($response->"data") 5]))
+                    }
+                    :if ($"test-status" and [:len $"offset-from-data"] != 0) do={
+                         # RFC2396: IPv4address = 1*digit "." 1*digit "." 1*digit "." 1*digit
+                         # RFC5234: DIGIT = %x30-39
+                         :local "iter-abcd-yesno" true
+                         :local "c-ind" $"offset-from-data"
+                         # BEGIN do-while
+                         :do {
+                              :local "xxx-num"
+                              :local "nonzero-ind"
+                              :local "iter-xxx-yesno" true
+                              :local "c-char"
+                              # BEGIN do-while
+                              :do {
+                                   :set "c-char" [:pick ($response->"data") $"c-ind"]
+                                   :if ([:len $"xxx-num"] != 0 or [:len $"c-char"] = 0 or [:len [:find "0" $"c-char" -1]] = 0) do={
+                                        :if ([:len $"c-char"] != 0 and [:len ($"digit-dict"->$"c-char")] != 0) do={
+                                             :if ([:len $"xxx-num"] != 0) do={
+                                                  :if ($"c-ind" < $"nonzero-ind" + 3) do={
+                                                       :set $"xxx-num" ($"xxx-num"*10 + ($"digit-dict"->$"c-char"))
+                                                       :set "c-ind" ($"c-ind" + 1)
+                                                       # CONTINUE
+                                                  } else={
+                                                       :set "iter-xxx-yesno" false
+                                                       # FAILFAST
+                                                  } # END if-else
+                                             } else={
+                                                  # mark first non-zero digit
+                                                  :set $"xxx-num" ($"digit-dict"->$"c-char")
+                                                  :set "nonzero-ind" $"c-ind"
+                                                  :set "c-ind" ($"c-ind" + 1)
+                                                  # CONTINUE
+                                             } # END if-else
+                                        } else={
+                                             # $"c-char" is not a decimal digit character,
+                                             # or [:typeof $"c-char"] is "nil".
+                                             :if ([:len $"xxx-num"] != 0) do={
+                                                  :if ($"xxx-num" <= 255) do={
+                                                       # BREAK
+                                                  } else={
+                                                       :set $"xxx-num" [:nothing]
+                                                       # FAILFAST
+                                                  } # END if-else
+                                                  :set "iter-xxx-yesno" false
+                                             } else={
+                                                  # either we came across no digit character,
+                                                  # or we just read a string of zeroes.
+                                                  :if ($"c-ind" != $"offset-from-data") do={
+                                                       # we read a string of zeroes.
+                                                       :set "xxx-num" 0
+                                                       # BREAK
+                                                  } else={
+                                                       # $"c-char" precedes everyone else.
+                                                       # we read nothing.
+                                                       # FAILFAST
+                                                  } # END if-else
+                                                  :set "iter-xxx-yesno" false
+                                             } # END if-else
+                                        } # END if-else
+                                   } else={
+                                        # $"c-char" is part of some leading zeroes.
+                                        :set "c-ind" ($"c-ind" + 1)
+                                        # CONTINUE
+                                   } # END if-else
+                              } while=($"c-ind" < [:len ($response->"data")] + 1 and $"iter-xxx-yesno")
+                              # END do-while
+                              :if ([:len $"xxx-num"] != 0) do={
+                                   :if (([:len $"c-char"] != 0 and [:len [:find "." $"c-char" -1]] != 0 and $"abcd-ind" != 1) or $"abcd-ind" = 1) do={
+                                        :local mask [:pick $"abcd-mask" ($"abcd-ind" - 1)]
+                                        :set "abcd-num" (($"xxx-num" << (($"abcd-ind" - 1) << 3)) | ($"abcd-num"&$mask))
+                                        :set "abcd-ind" ($"abcd-ind" - 1)
+                                        :if ($"abcd-ind" != 0) do={
+                                             # CONTINUE
+                                             :set "c-ind" ($"c-ind" + 1)
+                                        } else={
+                                             :local ddd [:tostr [:tonum ($"abcd-num"&255)]]
+                                             :local ccc [:tostr [:tonum (($"abcd-num" >> 8)&255)]]
+                                             :local bbb [:tostr [:tonum (($"abcd-num" >> 16)&255)]]
+                                             :local aaa [:tostr [:tonum ($"abcd-num" >> 24)]]
+                                             :set "abcd-ip" [:toip ($aaa . "." . $bbb . "." . $ccc . "." . $ddd)]
+                                             :set "iter-abcd-yesno" false
+                                             # SUCCESS: $"abcd-ip" is a valid IPv4 address.
+                                        } # END if-else
+                                   } else={
+                                        :set "iter-abcd-yesno" false
+                                        # FAILFAST
+                                   } # END if-else
+                              } else={
+                                   :set "iter-abcd-yesno" false
+                                   # FAILFAST
+                              } # END if-else
+                         } while=($"iter-abcd-yesno")
+                         # END do-while
+                    } else={
+                         # FAILFAST
+                    } # END if-else
+                    :if ([:len $"abcd-ip"] != 0) do={
+                         :local misshapen false
+                         :if (!($"abcd-ip" in "0.0.0.0/8")) do={} else={ :set misshapen true }
+
+                         # RFC 1918
+                         :if (!($"abcd-ip" in "10.0.0.0/8")) do={} else={ :set misshapen true }
+
+                         :if (!($"abcd-ip" in "100.64.0.0/10")) do={} else={ :set misshapen true }
+                         :if (!($"abcd-ip" in "127.0.0.0/8")) do={} else={ :set misshapen true }
+                         :if (!($"abcd-ip" in "169.254.0.0/16")) do={} else={ :set misshapen true }
+
+                         # RFC 1918
+                         :if (!($"abcd-ip" in "172.16.0.0/12")) do={} else={ :set misshapen true }
+
+                         :if (!($"abcd-ip" in "192.0.0.0/24")) do={} else={ :set misshapen true }
+
+                         # TEST-NET
+                         :if (!($"abcd-ip" in "192.0.2.0/24")) do={} else={ :set misshapen true }
+
+                         # RFC 7535
+                         :if (!($"abcd-ip" in "192.31.196.0/24")) do={} else={ :set misshapen true }
+
+                         # RFC 7450
+                         :if (!($"abcd-ip" in "192.52.193.0/24")) do={} else={ :set misshapen true }
+
+                         # RFC 7526
+                         #:if (!($"abcd-ip" in "192.88.99.0/24")) do={} else={ :set misshapen true }
+
+                         # RFC 1918
+                         :if (!($"abcd-ip" in "192.168.0.0/16")) do={} else={ :set misshapen true }
+
+                         # RFC 7534
+                         :if (!($"abcd-ip" in "192.175.48.0/24")) do={} else={ :set misshapen true }
+
+                         # BMWG through RFC 2544
+                         :if (!($"abcd-ip" in "198.18.0.0/15")) do={} else={ :set misshapen true }
+
+                         # TEST-NET
+                         :if (!($"abcd-ip" in "198.51.100.0/24")) do={} else={ :set misshapen true }
+                         :if (!($"abcd-ip" in "203.0.113.0/24")) do={} else={ :set misshapen true }
+
+                         :if (!($"abcd-ip" in "224.0.0.0/3")) do={} else={ :set misshapen true }
+
+                         :if (!$misshapen) do={
+                              :set "iter-fetch-yesno" false
+                              # SUCCESS: $"abcd-ip" is a globally routable unicast IPv4 address.
+                         } else={
+                              :set "abcd-ip" [:nothing]
+                              # RETRY
+                         } # END if-else
+                    } else={
+                         # RETRY
+                    } # END if-else
+               } on-error={
+                    :set "error-at-fetch" true
+               } # END on-error
+
+               :if ($"iter-fetch-yesno") do={
+                    :set "dyn-staleness" $"job-dyn-uptime"
+                    # BEGIN mtx_unlock
+                    :set "dyn-mtx-state" false
+                    # END mtx_unlock
+                    :if ($"error-at-fetch") do={
+                         :if ($"timeo-fetch-ind" != 0) do={
+                              :local "timeo-ss" [:pick $"timeo-fetch-tab" ($"timeo-fetch-ind" - 1)]
+                              :if (($"timeo-ss" >> 5) = 0) do={
+                                   :delay $"timeo-ss"
+                              } else={
+                                   :set "mcg-seed-16" (($"mcg-seed-16"*0xECC5)&0xFFFF)
+                                   :delay (($"mcg-seed-16"%($"timeo-ss" >> 3)) - ($"timeo-ss" >> 4))
+                              } # END if-else
+                              :set "timeo-fetch-ind" ($"timeo-fetch-ind" - 1)
+                         } else={
+                              :set "mcg-seed-16" (($"mcg-seed-16"*0xECC5)&0xFFFF)
+                              :delay (($"mcg-seed-16"&255) + 472)
+                         } # END if-else
+                    } else={
+                         :set "mcg-seed-32" (($"mcg-seed-32"*0x93D765DD)&0xFFFFFFFF)
+                         :delay (($"mcg-seed-32"&2047) + 2576)
+                    } # END if-else
+
+                    # BEGIN mtx_lock
+                    # BEGIN do-while
+                    :do {
+                         # BEGIN do-while
+                         :do {
+                              :set "dyn-mtx-id" $"otp-id"
+                         } while=($"dyn-mtx-state")
+                         # END do-while
+                         :set "dyn-mtx-state" true
+                    } while=($"dyn-mtx-id" != $"otp-id")
+                    # END do-while
+                    # END mtx_lock
+
+                    :if ($"job-dyn-uptime" <= $"dyn-uptime" or $"job-dyn-uptime" <= $"dyn-staleness") do={
+                         # cancel operation
+                         :set "iter-fetch-yesno" false
+                    } else={
+                         # CONTINUE
+                    } # END if-else
+               } else={
+                    if ([:len $"abcd-ip"] = 0) do={
+                         # CONTINUE
+                    } else={
+                         :set "dyn-as6939-endpoint" [:toip $"abcd-ip"]
+                         :set "dyn-uptime" [/system resource get uptime]
+                         # SUCCESS
+                    } # END if-else
+               } # END if-else
+          } while=($"iter-fetch-yesno")
+          # END do-while
+     } else={
+          # nochg
+     } # END if-else
+
+     # BEGIN mtx_unlock
+     :set "dyn-mtx-state" false
+     # END mtx_unlock
+}
