@@ -181,46 +181,110 @@
                     } # END if-else
                     :if ([:len $"abcd-ip"] != 0) do={
                          :local misshapen false
-                         :if (!($"abcd-ip" in "0.0.0.0/8")) do={} else={ :set misshapen true }
+                         :if ($"abcd-ip" in "0.0.0.0/1") do={
+                              :if ($"abcd-ip" in "0.0.0.0/2") do={
+                                   :if ($"abcd-ip" in "0.0.0.0/3") do={
+                                        :if (!($"abcd-ip" in "0.0.0.0/8")) do={} else={ :set misshapen true }
 
-                         # RFC 1918
-                         :if (!($"abcd-ip" in "10.0.0.0/8")) do={} else={ :set misshapen true }
+                                        # RFC 1918
+                                        :if (!($"abcd-ip" in "10.0.0.0/8")) do={} else={ :set misshapen true }
+                                   } else={ # $"abcd-ip" in "32.0.0.0/3"
+                                        # pass
+                                   } # END if-else
+                              } else={ # $"abcd-ip" in "64.0.0.0/2"
+                                   :if ($"abcd-ip" in "64.0.0.0/3") do={
+                                        # pass
+                                   } else={ # $"abcd-ip" in "96.0.0.0/3"
+                                        :if ($"abcd-ip" in "96.0.0.0/4") do={
+                                             :if (!($"abcd-ip" in "100.64.0.0/10")) do={} else={ :set misshapen true }
+                                        } else={ # $"abcd-ip" in "112.0.0.0/4"
+                                             :if (!($"abcd-ip" in "127.0.0.0/8")) do={} else={ :set misshapen true }
+                                        } # END if-else
+                                   } # END if-else
+                              } # END if-else
+                         } else={ # $"abcd-ip" in "128.0.0.0/1"
+                              :if ($"abcd-ip" in "128.0.0.0/2") do={
+                                   :if ($"abcd-ip" in "128.0.0.0/3") do={
+                                        # pass
+                                   } else={ # $"abcd-ip" in "160.0.0.0/3"
+                                        :if ($"abcd-ip" in "160.0.0.0/4") do={
+                                             :if ($"abcd-ip" in "160.0.0.0/5") do={
+                                                  # pass
+                                             } else={ # $"abcd-ip" in "168.0.0.0/5"
+                                                  :if ($"abcd-ip" in "168.0.0.0/6") do={
+                                                       :if (!($"abcd-ip" in "169.254.0.0/16")) do={} else={ :set misshapen true }
+                                                  } else={ # $"abcd-ip" in "172.0.0.0/6"
+                                                       # RFC 1918
+                                                       :if (!($"abcd-ip" in "172.16.0.0/12")) do={} else={ :set misshapen true }
+                                                  } # END if-else
+                                             } # END if-else
+                                        } else={ # $"abcd-ip" in "176.0.0.0/4"
+                                             # pass
+                                        } # END if-else
+                                   } # END if-else
+                              } else={ # $"abcd-ip" in "192.0.0.0/2"
+                                   :if ($"abcd-ip" in "192.0.0.0/3") do={
+                                        :if ($"abcd-ip" in "192.0.0.0/4") do={
+                                             :if ($"abcd-ip" in "192.0.0.0/5") do={
+                                                  :if ($"abcd-ip" in "192.0.0.0/6") do={
+                                                       :if ($"abcd-ip" in "192.0.0.0/8") do={
+                                                            :if ($"abcd-ip" in "192.0.0.0/9") do={
+                                                                 :if ($"abcd-ip" in "192.0.0.0/10") do={
+                                                                      :if ($"abcd-ip" in "192.0.0.0/11") do={
+                                                                           :if ($"abcd-ip" in "192.0.0.0/12") do={
+                                                                                :if ($"abcd-ip" in "192.0.0.0/22") do={
+                                                                                     :if ($"abcd-ip" in "192.0.0.0/23") do={
+                                                                                          :if (!($"abcd-ip" in "192.0.0.0/24")) do={} else={ :set misshapen true }
+                                                                                     } else={ # $"abcd-ip" in "192.0.2.0/23"
+                                                                                          # TEST-NET
+                                                                                          :if (!($"abcd-ip" in "192.0.2.0/24")) do={} else={ :set misshapen true }
+                                                                                     } # END if-else
+                                                                                } else={ # 192.0.4.0--192.0.15.255
+                                                                                     # pass
+                                                                                } # END if-else
+                                                                           } else={ # "abcd-ip" in "192.16.0.0/12"
+                                                                                # RFC 7535
+                                                                                :if (!($"abcd-ip" in "192.31.196.0/24")) do={} else={ :set misshapen true }
+                                                                           } # END if-else
+                                                                      } else={ # "abcd-ip" in "192.32.0.0/11"
+                                                                           # RFC 7450
+                                                                           :if (!($"abcd-ip" in "192.52.193.0/24")) do={} else={ :set misshapen true }
+                                                                      } # END if-else
+                                                                 } else={ # $"abcd-ip" in "192.64.0.0/10"
+                                                                      # RFC 7526
+                                                                      #:if (!($"abcd-ip" in "192.88.99.0/24")) do={} else={ :set misshapen true }
+                                                                      # pass
+                                                                 } # END if-else
+                                                            } else={ # $"abcd-ip" in "192.128.0.0/9"
+                                                                 # RFC 1918
+                                                                 :if (!($"abcd-ip" in "192.168.0.0/16")) do={} else={ :set misshapen true }
 
-                         :if (!($"abcd-ip" in "100.64.0.0/10")) do={} else={ :set misshapen true }
-                         :if (!($"abcd-ip" in "127.0.0.0/8")) do={} else={ :set misshapen true }
-                         :if (!($"abcd-ip" in "169.254.0.0/16")) do={} else={ :set misshapen true }
+                                                                 # RFC 7534
+                                                                 :if (!($"abcd-ip" in "192.175.48.0/24")) do={} else={ :set misshapen true }
+                                                            } # END if-else
+                                                       } else={ # 193.0.0.0--195.255.255.255
+                                                            # pass
+                                                       } # END if-else
+                                                  } else={ # $"abcd-ip" in "196.0.0.0/6"
+                                                       # BMWG through RFC 2544
+                                                       :if (!($"abcd-ip" in "198.18.0.0/15")) do={} else={ :set misshapen true }
 
-                         # RFC 1918
-                         :if (!($"abcd-ip" in "172.16.0.0/12")) do={} else={ :set misshapen true }
-
-                         :if (!($"abcd-ip" in "192.0.0.0/24")) do={} else={ :set misshapen true }
-
-                         # TEST-NET
-                         :if (!($"abcd-ip" in "192.0.2.0/24")) do={} else={ :set misshapen true }
-
-                         # RFC 7535
-                         :if (!($"abcd-ip" in "192.31.196.0/24")) do={} else={ :set misshapen true }
-
-                         # RFC 7450
-                         :if (!($"abcd-ip" in "192.52.193.0/24")) do={} else={ :set misshapen true }
-
-                         # RFC 7526
-                         #:if (!($"abcd-ip" in "192.88.99.0/24")) do={} else={ :set misshapen true }
-
-                         # RFC 1918
-                         :if (!($"abcd-ip" in "192.168.0.0/16")) do={} else={ :set misshapen true }
-
-                         # RFC 7534
-                         :if (!($"abcd-ip" in "192.175.48.0/24")) do={} else={ :set misshapen true }
-
-                         # BMWG through RFC 2544
-                         :if (!($"abcd-ip" in "198.18.0.0/15")) do={} else={ :set misshapen true }
-
-                         # TEST-NET
-                         :if (!($"abcd-ip" in "198.51.100.0/24")) do={} else={ :set misshapen true }
-                         :if (!($"abcd-ip" in "203.0.113.0/24")) do={} else={ :set misshapen true }
-
-                         :if (!($"abcd-ip" in "224.0.0.0/3")) do={} else={ :set misshapen true }
+                                                       # TEST-NET
+                                                       :if (!($"abcd-ip" in "198.51.100.0/24")) do={} else={ :set misshapen true }
+                                                  } # END if-else
+                                             } else={ # $"abcd-ip" in "200.0.0.0/5"
+                                                  # TEST-NET
+                                                  :if (!($"abcd-ip" in "203.0.113.0/24")) do={} else={ :set misshapen true }
+                                             } # END if-else
+                                        } else={ # $"abcd-ip" in "208.0.0.0/4"
+                                             # pass
+                                        } # END if-else
+                                   } else={ # $"abcd-ip" in "224.0.0.0/3"
+																	      #:if (!($"abcd-ip" in "224.0.0.0/3")) do={} else={ :set misshapen true }
+                                        :set misshapen true
+                                   } # END if-else
+                              } # END if-else
+                         } # END if-else
 
                          :if (!$misshapen) do={
                               :set "iter-fetch-yesno" false
