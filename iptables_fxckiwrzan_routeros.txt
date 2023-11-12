@@ -1,0 +1,57 @@
+# intro
+# =============
+# this is a simple WAN-MikroTik-LAN setup with a protocol 41 tunnel.
+# no IPv6 incoming connection is admissible on this network,
+# hence no rule explicitly handling IP protocol 41.
+
+# instructions
+# =============
+# to deploy this script,
+# put the name of WAN interface instead of uc38q7kytj_qua_ifname.
+# put the name of LAN interface instead of obsfrhej9k_qua_ifname.
+# put the network of LAN interface,
+# say "192.168.241.0/24" without quotes, instead of z3p5hwr1fs_qua_prefix.
+# class C network is taken for granted on LAN side. 
+
+/ip firewall address-list add address=10.0.0.0/8 list=RFC1918
+/ip firewall address-list add address=172.16.0.0/12 list=RFC1918
+/ip firewall address-list add address=192.168.0.0/16 list=RFC1918
+
+/ip firewall filter add action=fasttrack-connection chain=forward comment="defconf: fasttrack" connection-state=established,related disabled=yes
+/ip firewall filter add action=drop chain=forward connection-state=invalid
+/ip firewall filter add action=accept chain=forward connection-state=established,related,untracked
+/ip firewall filter add action=reject chain=forward comment="{\"NBName\":137,\"NBDatagram\":138}" dst-port=111,137,138,1900,3702,5353,5355,9955,9956 in-interface=uc38q7kytj_qua_ifname ipsec-policy=in,none protocol=udp reject-with=icmp-port-unreachable
+/ip firewall filter add action=reject chain=forward comment="ISP terminates the physical link upon discovery of certain well-knowned services." dst-port=25,42,111,135,137,139,445,515,548,587,631,1512,3702,5355,9955 in-interface=uc38q7kytj_qua_ifname ipsec-policy=in,none protocol=tcp reject-with=icmp-port-unreachable
+/ip firewall filter add action=reject chain=forward comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services." dst-port=80,443,8008,8080 in-interface=uc38q7kytj_qua_ifname ipsec-policy=in,none protocol=tcp reject-with=icmp-port-unreachable
+/ip firewall filter add action=drop chain=forward connection-nat-state=!dstnat in-interface=uc38q7kytj_qua_ifname ipsec-policy=in,none
+/ip firewall filter add action=accept chain=forward connection-state=new out-interface=uc38q7kytj_qua_ifname src-address=z3p5hwr1fs_qua_prefix
+/ip firewall filter add action=drop chain=forward out-interface=uc38q7kytj_qua_ifname
+/ip firewall filter add action=drop chain=input connection-state=invalid
+/ip firewall filter add action=accept chain=input connection-state=established,related,untracked
+/ip firewall filter add action=accept chain=input icmp-options=8:0-255 protocol=icmp
+/ip firewall filter add action=accept chain=input dst-address=255.255.255.255 dst-port=67 in-interface=obsfrhej9k_qua_ifname ipsec-policy=in,none protocol=udp src-address=0.0.0.0 src-port=68
+/ip firewall filter add action=accept chain=input dst-port=1900 in-interface=obsfrhej9k_qua_ifname protocol=udp
+/ip firewall filter add action=accept chain=input comment="MikroTik UPnP/IGD hosts configuration on port 2828---29JAN2022." dst-port=22,2828,8291 in-interface=obsfrhej9k_qua_ifname protocol=tcp
+/ip firewall filter add action=drop chain=input
+
+/ip firewall mangle add action=change-mss chain=postrouting connection-state=new ipsec-policy=out,none new-mss=536 out-interface=uc38q7kytj_qua_ifname passthrough=yes protocol=tcp tcp-flags=syn,!rst tcp-mss=0-535
+/ip firewall mangle add action=change-mss chain=postrouting connection-state=new ipsec-policy=out,none new-mss=1452 out-interface=uc38q7kytj_qua_ifname passthrough=yes protocol=tcp tcp-flags=syn,!rst tcp-mss=1453-65535
+
+/ip firewall nat add action=masquerade chain=srcnat ipsec-policy=out,none out-interface=uc38q7kytj_qua_ifname protocol=icmp
+/ip firewall nat add action=masquerade chain=srcnat ipsec-policy=out,none out-interface=uc38q7kytj_qua_ifname protocol=tcp to-ports=49152-65535
+/ip firewall nat add action=masquerade chain=srcnat ipsec-policy=out,none out-interface=uc38q7kytj_qua_ifname protocol=udp to-ports=49152-65535
+/ip firewall nat add action=masquerade chain=srcnat ipsec-policy=out,none out-interface=uc38q7kytj_qua_ifname protocol=sctp to-ports=49152-65535
+
+/ip firewall raw add action=drop chain=prerouting dst-address-list=RFC1918 in-interface=uc38q7kytj_qua_ifname
+#  0---Net Unreachable
+#  1---Host Unreachable
+#  2---Protocol Unreachable
+#  3---Port Unreachable
+#  4---Fragmentation Needed and Don't Fragment was Set
+/ip firewall raw add action=return chain=prerouting comment="Destination Unreachable (Type 3) - Codes 0-4" icmp-options=3:0-4 protocol=icmp
+# 13---Communication Administratively Prohibited
+/ip firewall raw add action=return chain=prerouting comment="Destination Unreachable (Type 3) - Code 13" icmp-options=3:13 protocol=icmp
+/ip firewall raw add action=return chain=prerouting comment="Time Exceeded (Type 11)" icmp-options=11:0 protocol=icmp
+/ip firewall raw add action=return chain=prerouting comment="Echo (Type 8)" icmp-options=8:0 protocol=icmp
+/ip firewall raw add action=return chain=prerouting comment="Echo Reply (Type 0)" icmp-options=0:0 protocol=icmp
+/ip firewall raw add action=drop chain=prerouting protocol=icmp
