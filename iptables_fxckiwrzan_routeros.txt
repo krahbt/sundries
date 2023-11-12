@@ -11,7 +11,9 @@
 # put the name of LAN interface instead of obsfrhej9k_qua_ifname.
 # put the network of LAN interface,
 # say "192.168.241.0/24" without quotes, instead of z3p5hwr1fs_qua_prefix.
-# class C network is taken for granted on LAN side. 
+# class C network is taken for granted on LAN side.
+# an MTU of 1492 is taken for granted on WAN side.
+# alter line 39 and 40 for smaller or jumbo frames.
 
 /ip firewall address-list add address=10.0.0.0/8 list=RFC1918
 /ip firewall address-list add address=172.16.0.0/12 list=RFC1918
