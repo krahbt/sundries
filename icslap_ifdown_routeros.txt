@@ -1,0 +1,103 @@
+# intro
+# =============
+# this script removes UPnP port mapping entries upon when WAN goes down.
+
+# instructions
+# =============
+# to deploy this script,
+# put the name of WAN interface hosting a globally routable unicast IPv4 address
+# instead of bzat3uyx2m_qua_ifname.
+# granted a LAN setup of 192.168.241.0/24, put "upnp 192.168.241."
+# instead of p3zg8t2cie_qua_prefix, quotes inclusive.
+# put [:len p3zg8t2cie_qua_prefix] instead of imp5gs7azn_qua_strlen.
+# put the host number of the LAN-facing internet gateway instead of fm1we5ghuc_qua_igd.
+# an class C network of /24 is taken for granted on the LAN side. 
+
+# ppp is responsible for defining $"local-address".
+foreach "entry-id" in=[/ip firewall nat find dynamic=yes chain="dstnat" dst-address=$"local-address" in-interface=bzat3uyx2m_qua_ifname] do={
+     :local lookup { p3zg8t2cie_qua_prefix=0 }
+     :local ans (lookup->[:pick ([/ip firewall nat get $"entry-id"]->"comment") 0 imp5gs7azn_qua_strlen])
+     :if ([:len ans] != 0) do={
+          :local "digit-dict" { "0"=0; "1"=1; "2"=2; "3"=3; "4"=4; "5"=5; "6"=6; "7"=7; "8"=8; "9"=9 }
+          :local "c-ind" imp5gs7azn_qua_strlen
+          :local "xxx-num"
+          :local "nonzero-ind"
+          :local "iter-xxx-yesno" true
+          :local "c-char"
+          # BEGIN do-while
+          :do {
+               :set "c-char" [:pick ([/ip firewall nat get $"entry-id"]->"comment") $"c-ind"]
+               :if ([:len $"xxx-num"] != 0 or [:len $"c-char"] = 0 or [:len [:find "0" $"c-char" -1]] = 0) do={
+                    :if ([:len $"c-char"] != 0 and [:len ($"digit-dict"->$"c-char")] != 0) do={
+                         :if ([:len $"xxx-num"] != 0) do={
+                              :if ($"c-ind" < $"nonzero-ind" + 3) do={
+                                   :set $"xxx-num" ($"xxx-num"*10 + ($"digit-dict"->$"c-char"))
+                                   :set "c-ind" ($"c-ind" + 1)
+                                   # CONTINUE
+                              } else={
+                                   :set "iter-xxx-yesno" false
+                                   # FAILFAST
+                              } # END if-else
+                         } else={
+                              # mark first non-zero digit
+                              :set $"xxx-num" ($"digit-dict"->$"c-char")
+                              :set "nonzero-ind" $"c-ind"
+                              :set "c-ind" ($"c-ind" + 1)
+                              # CONTINUE
+                         } # END if-else
+                    } else={
+                         # $"c-char" is not a decimal digit character,
+                         # or [:typeof $"c-char"] is "nil".
+                         :if ([:len $"xxx-num"] != 0) do={
+                              :if ($"xxx-num" <= 255) do={
+                                   # BREAK
+                              } else={
+                                   :set $"xxx-num" [:nothing]
+                                   # FAILFAST
+                              } # END if-else
+                              :set "iter-xxx-yesno" false
+                         } else={
+                              # either we came across no digit character,
+                              # or we just read a string of zeroes.
+                              :if ($"c-ind" != imp5gs7azn_qua_strlen) do={
+                                   # we read a string of zeroes.
+                                   :set "xxx-num" 0
+                                   # BREAK
+                              } else={
+                                   # $"c-char" precedes everyone else.
+                                   # we read nothing.
+                                   # FAILFAST
+                              } # END if-else
+                              :set "iter-xxx-yesno" false
+                         } # END if-else
+                    } # END if-else
+               } else={
+                    # $"c-char" is part of some leading zeroes.
+                    #:set "c-ind" ($"c-ind" + 1)
+                    # CONTINUE
+                    :set "iter-xxx-yesno" false
+                    # FAILFAST
+               } # END if-else
+          } while=($"c-ind" < [:len ([/ip firewall nat get $"entry-id"]->"comment")] + 1 and $"iter-xxx-yesno")
+          # END do-while
+          :if ([:len $"xxx-num"] != 0) do={
+               :if ([:len $"c-char"] != 0 and [:len [:find ":" $"c-char" -1]] != 0) do={
+                    :if ($"xxx-num" <= 254 and $"xxx-num" != fm1we5ghuc_qua_igd) do={
+                         :if (("192.168.241.".[:tostr $"xxx-num"]) = ([/ip firewall nat get $"entry-id"]->"to-addresses")) do={
+                              /ip firewall nat remove $"entry-id"
+                         } else={
+                              # pass
+                         } # END if-else
+                    } else={
+                         # pass
+                    } # END if-else
+               } else={
+                    # pass
+               } # END if-else
+          } else={
+               # pass
+          } # END if-else
+     } else={
+          # pass
+     } # END if-else
+} # END foreach
