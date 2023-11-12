@@ -1,6 +1,6 @@
 # intro
 # =============
-# this script removes UPnP port mapping entries upon when WAN goes down.
+# this script removes UPnP port mapping entries when WAN goes down.
 
 # instructions
 # =============
@@ -11,6 +11,7 @@
 # instead of p3zg8t2cie_qua_prefix, quotes inclusive.
 # put [:len p3zg8t2cie_qua_prefix] instead of imp5gs7azn_qua_strlen.
 # put the host number of the LAN-facing internet gateway instead of fm1we5ghuc_qua_igd.
+# say, an internet gateway of 192.168.241.222/24 features a host number of 222.
 # an class C network of /24 is taken for granted on the LAN side. 
 
 # ppp is responsible for defining $"local-address".
