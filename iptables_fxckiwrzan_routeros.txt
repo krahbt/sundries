@@ -1,8 +1,16 @@
 # intro
 # =============
 # this is a simple WAN-MikroTik-LAN setup with a protocol 41 tunnel.
-# no IPv6 incoming connection is admissible on this network,
-# hence no rule explicitly handling IP protocol 41.
+# this network admits no IPv6 incoming connection,
+# so no rule explicitly handles IP protocol 41.
+# LAN side of this setup makes use of DHCP, the specifics of which
+# are disclosed in a separate file.
+# a selection of ports to block cater specifically to communist China.
+# WAN side of this setup admits _no_ incoming connection,
+# while it is advisable to further restrict access to tcp port 8291,
+# in order to put a limit on management interface.
+# enabling tcp port 8291 from ssh just as long as winbox access be needed 
+# also serves.
 
 # instructions
 # =============
@@ -13,7 +21,7 @@
 # say "192.168.241.0/24" without quotes, instead of z3p5hwr1fs_qua_prefix.
 # class C network is taken for granted on LAN side.
 # an MTU of 1492 is taken for granted on WAN side.
-# alter line 39 and 40 for smaller or jumbo frames.
+# alter line 47 and 48 for smaller or jumbo frames.
 
 /ip firewall address-list add address=10.0.0.0/8 list=RFC1918
 /ip firewall address-list add address=172.16.0.0/12 list=RFC1918
