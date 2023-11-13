@@ -1,0 +1,79 @@
+# intro
+# =============
+# this network admits no IPv6 incoming connection.
+# an IP protocol 41 tunnel lays on IPv6 access.
+# LAN side of this setup makes use of
+# stateless radvd-only /
+# stateless radvd marking flag O referring to DHCPv6 /
+# stateful DHCPv6 beside radvd marking flag M, the specifics of which
+# are disclosed in a separate file.
+# an explicit selection of ports to block cater specifically
+# to communist China. however, only ICMPv6, UDP, and TCP/6697 is whitelisted.
+# experiments show _exactly_ _one_ connection of either TCP/22 or TCP/6697
+# was able to make it through without bringing down the physical link. 
+# it is advisable to further restrict access to tcp port 8291,
+# in order to put a limit on management interface.
+# enabling tcp port 8291 from ssh just as long as winbox access be needed 
+# also serves.
+
+# instructions
+# =============
+# to deploy this script,
+# put the name of WAN interface instead of khegm4w57n_qua_ifname.
+# put the name of LAN interface instead of yqcgmr7dw9_qua_ifname.
+# put the name of 6in4 interface instead of rc9mqtpzdb_qua_ifname,
+# say, "Hurricane Electric IPv6 Tunnel #nnnnnn", quotes inclusive.
+# put the name of the /64 allocation instead of wtm4yig9rq_qua_net6,
+# say, "200x:xxxx:xxxx:xxxx::/64" without quotes.
+# an MTU of 1492 is taken for granted on WAN side.
+# alter line 63 and 64 for smaller or jumbo frames.
+
+/ipv6 firewall address-list add address=::/128 comment="Unspecified Address" list=bad_ipv6
+/ipv6 firewall address-list add address=::1/128 comment="Loopback Address" list=bad_ipv6
+/ipv6 firewall address-list add address=fec0::/10 comment=RFC3879 list=bad_ipv6
+/ipv6 firewall address-list add address=::ffff:0.0.0.0/96 comment="IPv4-mapped Address" list=bad_ipv6
+/ipv6 firewall address-list add address=::/96 comment=RFC4291 list=bad_ipv6
+/ipv6 firewall address-list add address=100::/64 comment=RFC6666 list=bad_ipv6
+/ipv6 firewall address-list add address=2001:db8::/32 comment=RFC3849 list=bad_ipv6
+/ipv6 firewall address-list add address=2001:10::/28 comment=RFC7343 list=bad_ipv6
+/ipv6 firewall address-list add address=3ffe::/16 comment=RFC5156 list=bad_ipv6
+/ipv6 firewall address-list add address=fc00::/7 comment=RFC4193 list=bad_ipv6
+
+/ipv6 firewall filter add action=drop chain=forward connection-state=invalid
+/ipv6 firewall filter add action=accept chain=forward connection-state=established,related,untracked
+/ipv6 firewall filter add action=reject chain=forward comment="{\"NBName\":137,\"NBDatagram\":138}" dst-port=111,137,138,1900,3702,5353,5355,9955,9956 in-interface=rc9mqtpzdb_qua_ifname ipsec-policy=in,none protocol=udp reject-with=icmp-port-unreachable
+/ipv6 firewall filter add action=reject chain=forward comment="ISP terminates the physical link upon discovery of certain well-knowned services." dst-port=25,42,111,135,137,139,445,515,548,587,631,1512,3702,5355,9955 in-interface=rc9mqtpzdb_qua_ifname ipsec-policy=in,none protocol=tcp reject-with=icmp-port-unreachable
+/ipv6 firewall filter add action=reject chain=forward comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services. 6in4 tunnels are part of the collateral damage." dst-port=80,443,8008,8080 in-interface=rc9mqtpzdb_qua_ifname ipsec-policy=in,none protocol=tcp reject-with=icmp-port-unreachable
+/ipv6 firewall filter add action=drop chain=forward in-interface=rc9mqtpzdb_qua_ifname ipsec-policy=in,none
+/ipv6 firewall filter add action=reject chain=forward comment="{\"NBName\":137,\"NBDatagram\":138}" dst-port=111,137,138,1900,3702,5353,5355,9955-9956 ipsec-policy=out,none out-interface=rc9mqtpzdb_qua_ifname protocol=udp reject-with=icmp-port-unreachable
+/ipv6 firewall filter add action=reject chain=forward comment="ISP terminates the physical link upon discovery of certain well-knowned services." dst-port=25,42,80,135,137,139,445,515,548,587,631,1512,3702,5355,9955 ipsec-policy=out,none out-interface=rc9mqtpzdb_qua_ifname protocol=tcp reject-with=icmp-port-unreachable
+/ipv6 firewall filter add action=reject chain=forward comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services. 6in4 tunnels are part of the collateral damage." dst-port=80,443,8008,8080 ipsec-policy=out,none out-interface=rc9mqtpzdb_qua_ifname protocol=tcp reject-with=icmp-port-unreachable
+/ipv6 firewall filter add action=accept chain=forward icmp-options=128:0 out-interface=rc9mqtpzdb_qua_ifname protocol=icmpv6 src-address=wtm4yig9rq_qua_net6
+/ipv6 firewall filter add action=accept chain=forward out-interface=rc9mqtpzdb_qua_ifname protocol=udp src-address=wtm4yig9rq_qua_net6
+/ipv6 firewall filter add action=accept chain=forward comment="IRC over SSL"dst-port=6697 out-interface=rc9mqtpzdb_qua_ifname protocol=tcp src-address=wtm4yig9rq_qua_net6
+/ipv6 firewall filter add action=reject chain=forward ipsec-policy=out,none out-interface=rc9mqtpzdb_qua_ifname reject-with=icmp-port-unreachable
+/ipv6 firewall filter add action=drop chain=input connection-state=invalid
+/ipv6 firewall filter add action=accept chain=input connection-state=established,related,untracked
+/ipv6 firewall filter add action=accept chain=input comment="Echo Request (Type 128)" icmp-options=128:0 protocol=icmpv6
+/ipv6 firewall filter add action=accept chain=input comment="Router Solicitation (Type 133)" icmp-options=133:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
+/ipv6 firewall filter add action=accept chain=input comment="Neighbor Solicitation (Type 135)" icmp-options=135:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
+/ipv6 firewall filter add action=drop chain=input
+
+/ipv6 firewall mangle add action=change-mss chain=postrouting connection-state=new ipsec-policy=out,none new-mss=1220 out-interface=rc9mqtpzdb_qua_ifname passthrough=yes protocol=tcp tcp-flags=syn,!rst tcp-mss=0-1219
+/ipv6 firewall mangle add action=change-mss chain=postrouting comment="IPv6 jumbogram specifies an MSS of 65535." connection-state=new ipsec-policy=out,none new-mss=1412 out-interface=rc9mqtpzdb_qua_ifname passthrough=yes protocol=tcp tcp-flags=syn,!rst tcp-mss=1413-65534
+
+/ipv6 firewall raw add action=drop chain=prerouting comment="match-set bad_ipv6 src" src-address-list=bad_ipv6
+/ipv6 firewall raw add action=drop chain=prerouting comment="match-set bad_ipv6 dst" dst-address-list=bad_ipv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Destination Unreachable (Type 1)" icmp-options=1:0-6 protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Packet Too Big (Type 2)" icmp-options=2:0-255 protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Time Exceeded (Type 3)" icmp-options=3:0 protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Echo Request (Type 128)" icmp-options=128:0 protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Echo Reply (Type 129)" icmp-options=129:0 protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Router Solicitation (Type 133)" hop-limit=equal:255 icmp-options=133:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Router Advertisement (Type 134)" disabled=yes hop-limit=equal:255 icmp-options=134:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Neighbor Solicitation (Type 135)" hop-limit=equal:255 icmp-options=135:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
+/ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Neighbor Advertisement (Type 136)" hop-limit=equal:255 icmp-options=136:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
+/ipv6 firewall raw add action=drop chain=prerouting protocol=icmpv6
+/ipv6 firewall raw add action=accept chain=prerouting dst-port=547 in-interface=yqcgmr7dw9_qua_ifname protocol=udp src-address=fe80::/10 src-port=546
+/ipv6 firewall raw add action=accept chain=prerouting comment=DHCPv6-PD dst-port=546 in-interface=khegm4w57n_qua_ifname protocol=udp src-address=fe80::/10
+/ipv6 firewall raw add action=drop chain=output comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services. 6in4 tunnels are part of collateral damage." dst-port=80,443,8008,8080 out-interface=rc9mqtpzdb_qua_ifname protocol=tcp
