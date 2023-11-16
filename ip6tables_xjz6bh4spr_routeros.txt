@@ -1,10 +1,10 @@
 # intro
 # =============
-# this network admits no IPv6 incoming connection.
+# this network admits no incoming IPv6 connection.
 # an IP protocol 41 tunnel gives IPv6 access.
 # LAN side of this setup makes use of
 # stateless radvd-only /
-# stateless radvd marking flag O referring to DHCPv6 /
+# stateless radvd marking flag O denoting further setup through DHCPv6 /
 # stateful DHCPv6 beside radvd marking flag M, the specifics of which
 # are disclosed in a separate file.
 # an explicit selection of ports to block cater specifically
