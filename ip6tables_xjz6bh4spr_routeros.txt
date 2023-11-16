@@ -26,8 +26,8 @@
 # put the name of the /64 allocation instead of wtm4yig9rq_qua_net6,
 # say, "xxxx:xxxx:xxxx:xxxx::/64" without quotes.
 # an MTU of 1492 is taken for granted on WAN side.
-# alter line 63 and 64 for smaller or jumbo frames.
-# line 79 caters to DHCPv6 Prefix Delegation.
+# alter line 64 and 65 for smaller or jumbo frames.
+# DHCPv6 Prefix Delegation is covered by connection tracking.
 
 /ipv6 firewall address-list add address=::/128 comment="Unspecified Address" list=bad_ipv6
 /ipv6 firewall address-list add address=::1/128 comment="Loopback Address" list=bad_ipv6
@@ -59,6 +59,7 @@
 /ipv6 firewall filter add action=accept chain=input comment="Router Solicitation (Type 133)" icmp-options=133:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
 /ipv6 firewall filter add action=accept chain=input comment="Neighbor Solicitation (Type 135)" icmp-options=135:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
 /ipv6 firewall filter add action=drop chain=input
+/ipv6 firewall filter add action=reject chain=output comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services. 6in4 tunnels are part of collateral damage." dst-port=80,443,8008,8080 out-interface=rc9mqtpzdb_qua_ifname protocol=tcp reject-with=icmp-host-unreachable
 
 /ipv6 firewall mangle add action=change-mss chain=postrouting connection-state=new ipsec-policy=out,none new-mss=1220 out-interface=rc9mqtpzdb_qua_ifname passthrough=yes protocol=tcp tcp-flags=syn,!rst tcp-mss=0-1219
 /ipv6 firewall mangle add action=change-mss chain=postrouting comment="IPv6 jumbogram specifies an MSS of 65535." connection-state=new ipsec-policy=out,none new-mss=1412 out-interface=rc9mqtpzdb_qua_ifname passthrough=yes protocol=tcp tcp-flags=syn,!rst tcp-mss=1413-65534
@@ -76,5 +77,3 @@
 /ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Neighbor Advertisement (Type 136)" hop-limit=equal:255 icmp-options=136:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
 /ipv6 firewall raw add action=drop chain=prerouting protocol=icmpv6
 /ipv6 firewall raw add action=accept chain=prerouting dst-port=547 in-interface=yqcgmr7dw9_qua_ifname protocol=udp src-address=fe80::/10 src-port=546
-#/ipv6 firewall raw add action=accept chain=prerouting comment=DHCPv6-PD dst-port=546 in-interface=khegm4w57n_qua_ifname protocol=udp src-address=fe80::/10
-/ipv6 firewall raw add action=drop chain=output comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services. 6in4 tunnels are part of collateral damage." dst-port=80,443,8008,8080 out-interface=rc9mqtpzdb_qua_ifname protocol=tcp
