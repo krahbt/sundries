@@ -8,7 +8,7 @@
 # stateful DHCPv6 beside radvd marking flag M, the specifics of which
 # are disclosed in a separate file.
 # an explicit selection of ports to block cater specifically
-# to communist China. however, only ICMPv6, UDP, and TCP/6697 is whitelisted.
+# to communist China. however, only ICMPv6, UDP, and TCP/6697 are whitelisted.
 # experiments show _exactly_ _one_ connection of either TCP/22 or TCP/6697
 # was able to make it through without bringing down the physical link. 
 # it is advisable to further restrict access to tcp port 8291,
@@ -24,7 +24,7 @@
 # put the name of 6in4 interface instead of rc9mqtpzdb_qua_ifname,
 # say, "Hurricane Electric IPv6 Tunnel #nnnnnn", quotes inclusive.
 # put the name of the /64 allocation instead of wtm4yig9rq_qua_net6,
-# say, "200x:xxxx:xxxx:xxxx::/64" without quotes.
+# say, "xxxx:xxxx:xxxx:xxxx::/64" without quotes.
 # an MTU of 1492 is taken for granted on WAN side.
 # alter line 63 and 64 for smaller or jumbo frames.
 # line 79 caters to DHCPv6 Prefix Delegation.
