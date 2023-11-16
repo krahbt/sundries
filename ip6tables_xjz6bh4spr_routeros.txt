@@ -1,7 +1,7 @@
 # intro
 # =============
 # this network admits no IPv6 incoming connection.
-# an IP protocol 41 tunnel lays on IPv6 access.
+# an IP protocol 41 tunnel gives IPv6 access.
 # LAN side of this setup makes use of
 # stateless radvd-only /
 # stateless radvd marking flag O referring to DHCPv6 /
@@ -27,6 +27,7 @@
 # say, "200x:xxxx:xxxx:xxxx::/64" without quotes.
 # an MTU of 1492 is taken for granted on WAN side.
 # alter line 63 and 64 for smaller or jumbo frames.
+# line 79 caters to DHCPv6 Prefix Delegation.
 
 /ipv6 firewall address-list add address=::/128 comment="Unspecified Address" list=bad_ipv6
 /ipv6 firewall address-list add address=::1/128 comment="Loopback Address" list=bad_ipv6
@@ -75,5 +76,5 @@
 /ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Neighbor Advertisement (Type 136)" hop-limit=equal:255 icmp-options=136:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
 /ipv6 firewall raw add action=drop chain=prerouting protocol=icmpv6
 /ipv6 firewall raw add action=accept chain=prerouting dst-port=547 in-interface=yqcgmr7dw9_qua_ifname protocol=udp src-address=fe80::/10 src-port=546
-/ipv6 firewall raw add action=accept chain=prerouting comment=DHCPv6-PD dst-port=546 in-interface=khegm4w57n_qua_ifname protocol=udp src-address=fe80::/10
+#/ipv6 firewall raw add action=accept chain=prerouting comment=DHCPv6-PD dst-port=546 in-interface=khegm4w57n_qua_ifname protocol=udp src-address=fe80::/10
 /ipv6 firewall raw add action=drop chain=output comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services. 6in4 tunnels are part of collateral damage." dst-port=80,443,8008,8080 out-interface=rc9mqtpzdb_qua_ifname protocol=tcp
