@@ -57,7 +57,7 @@
 /ipv6 firewall filter add action=accept chain=input comment="Echo Request (Type 128)" icmp-options=128:0 protocol=icmpv6
 /ipv6 firewall filter add action=accept chain=input comment="Router Solicitation (Type 133)" icmp-options=133:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
 /ipv6 firewall filter add action=accept chain=input comment="Neighbor Solicitation (Type 135)" icmp-options=135:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
-/ipv6 firewall filter add action=accept chain=input comment="DHCPv6 Server" dst-port=547 in-interface=yqcgmr7dw9_qua_ifname protocol=udp
+/ipv6 firewall filter add action=accept chain=input comment="DHCPv6 Server" dst-port=547 in-interface=yqcgmr7dw9_qua_ifname protocol=udp src-address=fe80::/10 src-port=546
 /ipv6 firewall filter add action=drop chain=input
 /ipv6 firewall filter add action=reject chain=output comment="ISP terminates PPPoE and the associated physical link upon discovering HTTP/HTTPS services. 6in4 tunnels are part of collateral damage." dst-port=80,443,8008,8080 out-interface=rc9mqtpzdb_qua_ifname protocol=tcp reject-with=icmp-host-unreachable
 
@@ -76,4 +76,3 @@
 /ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Neighbor Solicitation (Type 135)" hop-limit=equal:255 icmp-options=135:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
 /ipv6 firewall raw add action=return chain=prerouting comment="RFC4890: Neighbor Advertisement (Type 136)" hop-limit=equal:255 icmp-options=136:0 in-interface=yqcgmr7dw9_qua_ifname protocol=icmpv6
 /ipv6 firewall raw add action=drop chain=prerouting protocol=icmpv6
-/ipv6 firewall raw add action=accept chain=prerouting dst-port=547 in-interface=yqcgmr7dw9_qua_ifname protocol=udp src-address=fe80::/10 src-port=546
