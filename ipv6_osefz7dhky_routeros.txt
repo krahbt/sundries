@@ -1,0 +1,51 @@
+# intro
+# =============
+# this setup provides IPv6 access through an IP protocol 41 tunnel,
+# which assigns a static /64 prefix to LAN. the intended setup
+# is to announce this prefix over radvd, while having clients refer
+# to DHCPv6 for additional options. this is a stateless setup.
+# however, an equivalent managed setup is included, to cater to clients
+# resorting still to managed configuration. an DHCPv6-PD setup should
+# refer to options under "/ipv6 dhcp-client". this setup caters to
+# the locale of Manila, the Philippines, without DST.
+
+# instructions
+# =============
+# to deploy this script,
+# put the name of LAN interface instead of u9dywmkrzp_qua_ifname,
+# put the name of the 6in4 tunnel, such as
+# "Hurricane Electric IPv6 Tunnel #nnnnnn", quotes included, instead of
+# q3dtgb4m7s_qua_ifname,
+# put the IPv4 address denoting the other end of the 6in4 tunnel,
+# such as "192.0.2.92", quotes excepted, instead of iekta4csbw_qua_ipaddr,
+# put the /64 block assigned to this end, such as "2001:db8:df72:45d9::/64",
+# quotes excepted, instead of wmhkrqazi3_qua_inet6.
+# RouterOS specifies "/interface 6to4" for 6in4 tunnels, despite the clear
+# distinction between the duo. an MTU of 1472 is reckoned by taking 20 off
+# 1492, which is 1500 minus the PPP header size, namely 8 bytes.
+
+/interface 6to4 add clamp-tcp-mss=no !keepalive mtu=1472 name=q3dtgb4m7s_qua_ifname remote-address=iekta4csbw_qua_ipaddr
+
+/ipv6 nd set [ find default=yes ] disabled=yes
+
+# "advertise-dns=yes" in actuality advertises settings under "/ip dns".
+/ipv6 nd add advertise-dns=no hop-limit=65 interface=u9dywmkrzp_qua_ifname managed-address-configuration=no other-configuration=yes
+
+/ipv6 nd prefix add interface=u9dywmkrzp_qua_ifname prefix=wmhkrqazi3_qua_inet6
+
+/ipv6 pool add name=wmhkrqazi3_qua_inet6 prefix=wmhkrqazi3_qua_inet6 prefix-length=64
+
+/ipv6 dhcp-server option add code=23 name="DNS Recursive Name Server" value=0x20010470002000000000000000000002
+
+# TZ='<+08>-8'
+# https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html
+/ipv6 dhcp-server option add code=41 name="TZ POSIX String" value=0x3C2B30383E2D38
+
+/ipv6 dhcp-server option add code=42 name="TZ Name" value="'Asia/Manila'"
+
+# https://www.he.net/adm/ntp.html
+/ipv6 dhcp-server option add code=31 name="SNTP Servers" value=0x20010470000000500000000000000002
+/ipv6 dhcp-server option add code=56 name="NTP Server" value=0x0001001020010470000000500000000000000002
+
+/ipv6 dhcp-server option sets add name=wmhkrqazi3_qua_inet6 options="DNS Recursive Name Server,TZ POSIX String,TZ Name,NTP Server,SNTP Servers"
+/ipv6 dhcp-server add address-pool=wmhkrqazi3_qua_inet6 dhcp-option=wmhkrqazi3_qua_inet6 interface=u9dywmkrzp_qua_ifname lease-time=1w name=wmhkrqazi3_qua_inet6
