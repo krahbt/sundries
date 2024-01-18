@@ -32,5 +32,5 @@ settle on another POSIX TZ string, say '\<CET\>-1\<CEST\>-2,M3.5.0,M10.5.0'
 with quotes, instead of q1mt7beqhi;
 settle on a site, say 'https://site/id/name' without quotes,
 to get the Date header via HTTPS, instead of j2fpqdcx7t; and
-settle on randomness beacon, say 'https://site/id/name' without quotes,
+settle on a randomness beacon, say 'https://site/id/name' without quotes,
 instead of t4w5jeyckg.
