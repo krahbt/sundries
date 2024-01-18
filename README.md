@@ -1,5 +1,11 @@
 sundries
 =========================================
+Android
+-----------------------------------------
++ [Google System Release Notes](https://support.google.com/product-documentation/answer/14343500)
++ [Tags / Build IDs per AOSP](https://source.android.com/docs/setup/reference/build-numbers)
++ [mAvailableDoHProviders, or bootstrapping DoH Providers](https://android.googlesource.com/platform/packages/modules/DnsResolver/+/refs/tags/android-14.0.0_r21/PrivateDnsConfiguration.h#250)
+  + DNS over TLS is supported since Android 9.0, while only servers listed in mAvailableDoHProviders are able to serve DNS over HTTPS when Private DNS specifies any mAvailableDoHProviders\[ind\]\[2\]. This is the case for Android 13.
 
 IP and IPv6 setup
 -----------------------------------------
