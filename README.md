@@ -5,7 +5,7 @@ IP and IPv6 setup
 -----------------------------------------
 + setup
   + pppoe_nxwgh7m4zf_routeros.txt
-    + PPPoE and common WAN services such as NTP
+    + PPPoE on CPE and common WAN services such as NTP
   + dhcp_x5anyx7p3f_routeros.txt
   + icslap_ifdown_routeros.txt
     + UPnP IGD
