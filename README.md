@@ -34,3 +34,9 @@ settle on a site, say 'https://site/id/name' without quotes,
 to get the Date header via HTTPS, instead of j2fpqdcx7t; and
 settle on a randomness beacon, say 'https://site/id/name' without quotes,
 instead of t4w5jeyckg.
+
+_kofpjw1ma3.txt takes a personalization string, while _md46o7eyt5.txt tosses a
+timestamp to the mix. _utkafywcim.txt draws from a randomness beacon to boot.
+however, due to a dearth of commands/utilities on Android, entropy sources are
+mixed through an unkeyed MAC function, or just a simple hash function.
+where available, try HMAC/UMAC/PBKDF2/yescrypt and friends instead.
