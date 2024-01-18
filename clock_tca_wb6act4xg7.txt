@@ -1,0 +1,1 @@
+*LC_TIME=POSIX TZ=q1mt7beqhi date -u -Is|awk 'END { print $0;sp="curl -m 2 -o /dev/null -s --tlsv1.3 -I -w \047%%header{date}\047 j2fpqdcx7t";ec=(sp | getline);close(sp); if (ec==1) { gsub(/[^ -z]+/,"");print $0; }}'
