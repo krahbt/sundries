@@ -12,7 +12,7 @@ IP and IPv6 setup
   + ipv6_osefz7dhky_routeros.txt
     + radvd and DHCPv6
   + tunnelbroker_ifup_routeros.txt
-    + DDNS and RFC 2473
+    + DDNS and RFC 1933
 + firewall
   + iptables_fxckiwrzan_routeros.txt
   + ip6tables_xjz6bh4spr_routeros.txt
