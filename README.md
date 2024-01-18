@@ -26,9 +26,9 @@ from the password generator.
 before running these scripts,
 put a personalization string, say 'abc' with quotes,
 instead of a78ju3y1xh;
-settle on a POSIX TZ string, say '\047<CET>-1<CEST>-2,M3.5.0,M10.5.0\047'
+settle on a POSIX TZ string, say '\\047\<CET\>-1\<CEST\>-2,M3.5.0,M10.5.0\\047'
 without quotes, instead of fdpen962jq;
-settle on another POSIX TZ string, say '<CET>-1<CEST>-2,M3.5.0,M10.5.0'
+settle on another POSIX TZ string, say '\<CET\>-1\<CEST\>-2,M3.5.0,M10.5.0'
 with quotes, instead of q1mt7beqhi;
 settle on a site, say 'https://site/id/name' without quotes,
 to get the Date header via HTTPS, instead of j2fpqdcx7t; and
