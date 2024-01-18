@@ -1,0 +1,36 @@
+# intro
+# =============
+# this is an WAN setup for PPPoE subscribers.
+
+# instructions
+# =============
+# name the PPPoE profile instead of gc58jmno1a.
+# put the underlying WAN interface instead of d4ecwm76ks.
+# name the PPPoE interface instead of p9xozu6ya5.
+# put username and password per this PPP interface instead of nziktxwph6 and
+# bzr7ni1r3y respectively.
+
+# to access NTP servers without resolving any domain name,
+# put each actual server address where 0.0.0.1 and 0.0.0.2 stand respectively.
+/system ntp client set enabled=yes primary-ntp=0.0.0.1 secondary-ntp=0.0.0.2
+
+# to access NTP servers through domain name lookup,
+# put an actual NTP server domain where time.arpa.home stands.
+# this requires an /ip dns setup.
+/system ntp client set enabled=yes primary-ntp=0.0.0.0 secondary-ntp=0.0.0.0 server-dns-names=time.arpa.home
+
+# session-timeout should be chosen so that CPE's PADT manages to reach the other
+# end before CPE receives any PADT. "/ip upnp interfaces" is a better place to
+# manage UPnP per interface than is use-upnp, since the former marks an
+# interface as external/internal, hence use-upnp=no.
+/ppp profile add bridge-learning=no change-tcp-mss=no name=gc58jmno1a only-one=no session-timeout=1d23h59m47s use-compression=no use-encryption=no use-ipv6=no use-mpls=no use-upnp=no
+
+# it is possible for CPE to PPPoE over VLAN, albeit such practice is not
+# thorougly tested. the mileage varies as on how to find the VLAN ID.
+# choose keepalive-timeout so that it does not overwhelm the other end.
+# this is achieved through eliminating LCP Echo-Request singletons without a
+# matching LCP Echo-Reply. an elapse as large as 30 seconds suffices.
+# this amount is taken off a manual from Juniper's and managed to withstand
+# trials of time. max-mru and max-mtu are chosen so that the setup accomodates
+# baby jumbo frames.
+/interface pppoe-client add add-default-route=yes allow=pap disabled=no interface=d4ecwm76ks keepalive-timeout=30 max-mru=1500 max-mtu=1500 name=p9xozu6ya5 password=bzr7ni1r3y profile=gc58jmno1a user=nziktxwph6
