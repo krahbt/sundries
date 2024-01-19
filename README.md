@@ -47,5 +47,5 @@ say "abc"; then put this value, alongside quotes, instead of buqoxj1ey5.
 _kofpjw1ma3.txt takes a personalization string, while _md46o7eyt5.txt tosses a
 timestamp to the mix. _utkafywcim.txt draws from a randomness beacon to boot.
 however, due to a dearth of commands/utilities on Android, entropy sources are
-mixed through an unkeyed MAC function, or just a simple hash function.
-where available, try HMAC/UMAC/PBKDF2/yescrypt and friends instead.
+mixed through an HMAC function. where available, try PBKDF2/yescrypt and friends
+instead. in particular, having to implement XOR over awk makes it a slog.
