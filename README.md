@@ -37,11 +37,12 @@ instead of a78ju3y1xh;
 settle on a POSIX TZ string, say '\\047\<CET\>-1\<CEST\>-2,M3.5.0,M10.5.0\\047'
 without quotes, instead of fdpen962jq;
 settle on another POSIX TZ string, say '\<CET\>-1\<CEST\>-2,M3.5.0,M10.5.0'
-with quotes, instead of q1mt7beqhi;
+alongside quotes, instead of q1mt7beqhi;
 settle on a site, say 'https://site/id/name' without quotes,
 to get the Date header via HTTPS, instead of j2fpqdcx7t; and
 settle on a randomness beacon, say 'https://site/id/name' without quotes,
-instead of t4w5jeyckg.
+instead of t4w5jeyckg. settle on a nonce, and pass it to base64, which begets,
+say "abc"; then put this value, alongside quotes, instead of buqoxj1ey5.
 
 _kofpjw1ma3.txt takes a personalization string, while _md46o7eyt5.txt tosses a
 timestamp to the mix. _utkafywcim.txt draws from a randomness beacon to boot.
