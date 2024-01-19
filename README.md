@@ -25,7 +25,7 @@ IP and IPv6 setup
 
 password_tca_\*.txt and clock_tca_\*.txt
 -----------------------------------------
-while password_tca_\*.txt, emulating Hash_DRBG, is originally intended for
+while password_tca_\*.txt, emulating HMAC_DRBG, is originally intended for
 [an Android app](https://github.com/chrisgch/tca),
 it should run on UNIX systems featuring "/dev/urandom".
 characters of class \[ 028IVlv\] are excluded
