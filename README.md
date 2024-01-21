@@ -48,4 +48,7 @@ _kofpjw1ma3.txt takes a personalization string, while _md46o7eyt5.txt tosses a
 timestamp to the mix. _utkafywcim.txt draws from a randomness beacon to boot.
 however, due to a dearth of commands/utilities on Android, entropy sources are
 mixed through an HMAC function. where available, try PBKDF2/yescrypt and friends
-instead. in particular, having to implement XOR over awk makes it a slog.
+instead. in particular, having to implement XOR over awk makes it a slog. these
+files are kept as one-liners to make them impermeable to any app other than
+tca, since these files would then reside in per-app storage, and to avoid
+reaching limits governing Linux command line.
